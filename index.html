@@ -39,11 +39,11 @@
         .btn-purple:hover { background: #7c3aed; }
         
         .device-badge { background: #334155; padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px; color: #38bdf8; word-break: break-all; }
+        .sync-status { text-align: center; font-size: 11px; color: #38bdf8; margin-top: 8px; }
     </style>
 </head>
 <body>
 
-<!-- स्टेप 1: मास्टर पासवर्ड स्क्रीन -->
 <div class="card" id="loginScreen">
     <h3>Admin Login</h3>
     <input type="password" id="adminPass" placeholder="Enter Login Password">
@@ -51,7 +51,6 @@
     <div id="loginError" class="error"></div>
 </div>
 
-<!-- स्टेप 2: मुख्य डैशबोर्ड -->
 <div class="card hidden" id="adminPanel">
     
     <div class="top-nav-bar">
@@ -75,9 +74,9 @@
     </select>
 
     <button onclick="addNewKey()">Generate Key</button>
+    <div class="sync-status" id="syncStatus">Status: Ready</div>
 </div>
 
-<!-- स्टेप 3: की-कंट्रोल पेज -->
 <div class="hidden full-page" id="keyControlPage">
     <div class="control-box">
         <button class="btn-back" onclick="closeKeyControlPage()">⬅ Back to Dashboard</button>
@@ -86,7 +85,6 @@
     </div>
 </div>
 
-<!-- स्टेप 4: डिवाइस सिंक पेज -->
 <div class="hidden full-page" id="deviceSyncPage">
     <div class="control-box">
         <button class="btn-back" onclick="closeDeviceSyncPage()">⬅ Back to Dashboard</button>
@@ -103,6 +101,12 @@
 <script>
     const MASTER_SERVER_PASSWORD = "AliAbbas2";
 
+    // GitHub API Settings
+    const GITHUB_USER = "sabirkhan12441213-tech";
+    const GITHUB_REPO = "vip-key-server";
+    const GITHUB_PATH = "keys.json";
+    const GITHUB_TOKEN = "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";
+
     function getOrSetDeviceBuildID() {
         let buildId = localStorage.getItem('my_device_build_id');
         if(!buildId) {
@@ -115,6 +119,7 @@
     window.onload = function() {
         let myId = getOrSetDeviceBuildID();
         document.getElementById('myBuildBadge').innerText = "My Build ID: " + myId;
+        fetchKeysFromGitHub(); // वेबसाइट खुलते ही गिटहब से लाइव कीज फेच करेगा
     };
 
     function checkAdminPassword() {
@@ -129,7 +134,7 @@
 
     function openKeyControlPage() {
         document.getElementById('keyControlPage').classList.remove('hidden');
-        loadExistingKeys();
+        fetchKeysFromGitHub();
     }
 
     function closeKeyControlPage() {
@@ -158,12 +163,69 @@
         closeDeviceSyncPage();
     }
 
-    function loadExistingKeys() {
-        let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-        renderKeys(keys);
+    // GitHub से लाइव कीज लाने के लिए
+    async function fetchKeysFromGitHub() {
+        try {
+            let res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}?t=${Date.now()}`);
+            if(res.ok) {
+                let data = await res.json();
+                localStorage.setItem('admin_keys', JSON.stringify(data));
+                renderKeys(data);
+            }
+        } catch(err) {
+            console.log("Using local cache due to network error");
+            let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
+            renderKeys(keys);
+        }
     }
 
-    function addNewKey() {
+    // GitHub पर डेटा सेव/अपडेट करने के लिए मुख्य फंक्शन
+    async function saveKeysToGitHub(keysArray) {
+        const statusEl = document.getElementById('syncStatus');
+        if(statusEl) statusEl.innerText = "Status: Syncing with GitHub...";
+
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+
+        try {
+            // 1. Current file का SHA लेना जरूरी है
+            let getRes = await fetch(apiUrl, {
+                headers: { "Authorization": `token ${GITHUB_TOKEN}` }
+            });
+            let fileData = await getRes.json();
+            let sha = fileData.sha;
+
+            // 2. Data को Base64 में Encode करना
+            let jsonString = JSON.stringify(keysArray, null, 2);
+            let contentEncoded = btoa(unescape(encodeURIComponent(jsonString)));
+
+            // 3. GitHub पर PUT रिक्वेस्ट भेजना
+            let putRes = await fetch(apiUrl, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `token ${GITHUB_TOKEN}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message: "Auto-update keys from Sabir Web Admin Panel",
+                    content: contentEncoded,
+                    sha: sha
+                })
+            });
+
+            if(putRes.ok) {
+                if(statusEl) statusEl.innerText = "Status: Synced Successfully!";
+                localStorage.setItem('admin_keys', JSON.stringify(keysArray));
+            } else {
+                if(statusEl) statusEl.innerText = "Status: Sync Failed!";
+                alert("GitHub Sync Failed! Check token or permissions.");
+            }
+        } catch(err) {
+            console.error(err);
+            if(statusEl) statusEl.innerText = "Status: Network Error!";
+        }
+    }
+
+    async function addNewKey() {
         const keyName = document.getElementById('customKey').value.trim();
         const durationHours = parseFloat(document.getElementById('durationSelect').value);
 
@@ -182,27 +244,29 @@
             status: "active"
         });
 
-        localStorage.setItem('admin_keys', JSON.stringify(keys));
         document.getElementById('customKey').value = "";
-        alert("Key Generated Successfully!");
+        await saveKeysToGitHub(keys);
+        renderKeys(keys);
+        alert("Key Generated and Synced to GitHub Successfully!");
     }
 
-    function toggleBlockKey(index) {
+    async function toggleBlockKey(index) {
         let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
         keys[index].status = (keys[index].status === "active") ? "blocked" : "active";
-        localStorage.setItem('admin_keys', JSON.stringify(keys));
+        await saveKeysToGitHub(keys);
         renderKeys(keys);
     }
 
-    function deleteKey(index) {
+    async function deleteKey(index) {
         let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
         keys.splice(index, 1);
-        localStorage.setItem('admin_keys', JSON.stringify(keys));
+        await saveKeysToGitHub(keys);
         renderKeys(keys);
     }
 
     function renderKeys(keys) {
         const container = document.getElementById('keyListContainer');
+        if(!container) return;
         container.innerHTML = "";
 
         if(keys.length === 0) {
@@ -275,3 +339,4 @@
 
 </body>
 </html>
+
