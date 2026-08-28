@@ -19,19 +19,17 @@
 
 <div class="gos-card">
     <h3 style="text-align:center; margin-top:0;">GOS Server Activation</h3>
-    <p style="font-size: 11px; color: #94a3b8; text-align:center;">Enter generated key from admin panel:</p>
+    <p style="font-size: 11px; color: #94a3b8; text-align:center;">Enter generated key:</p>
     
-    <input type="text" id="enteredKey" placeholder="Enter Key Name (e.g. Ali12)">
+    <input type="text" id="enteredKey" placeholder="Enter Key Name (e.g. LG-KEY-01)">
     <button onclick="verifyAndActivateKey()">Activate Key</button>
     
     <div id="gosStatus" class="status-box" style="display:none;"></div>
 </div>
 
 <script>
-    const GITHUB_USER = "sabirkhan12441213-tech";
-    const GITHUB_REPO = "vip-key-server";
-    const GITHUB_PATH = "keys.json";
-    const GITHUB_TOKEN = "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";
+    // यहाँ अपनी GitHub raw keys.json फाइल का लिंक डाल दें
+    const GITHUB_JSON_URL = "https://raw.githubusercontent.com/sabirkhan12441213-tech/vip-key-server/main/keys.json";
 
     async function verifyAndActivateKey() {
         const inputKey = document.getElementById('enteredKey').value.trim();
@@ -46,29 +44,25 @@
 
         statusBox.style.display = "block";
         statusBox.className = "status-box";
-        statusBox.innerText = "Checking key from remote server...";
+        statusBox.innerText = "Checking online server...";
 
         try {
-            let res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}?t=${Date.now()}`);
-            if(!res.ok) throw new Error("Could not fetch server keys.");
+            let res = await fetch(GITHUB_JSON_URL + "?t=" + Date.now());
+            if(!res.ok) throw new Error("Server fetch failed");
 
             let keys = await res.json();
             let foundKey = keys.find(k => k.name === inputKey);
 
             if(!foundKey) {
                 statusBox.className = "status-box error";
-                statusBox.innerText = "Invalid Key! Key not found on server.";
+                statusBox.innerText = "Invalid Key! Not found on server.";
                 return;
             }
 
             if(foundKey.status === "blocked") {
                 statusBox.className = "status-box error";
-                statusBox.innerText = "This key has been blocked by Admin!";
+                statusBox.innerText = "This key is blocked!";
                 return;
-            }
-
-            if(!foundKey.startTime) {
-                foundKey.startTime = Date.now();
             }
 
             statusBox.className = "status-box success";
@@ -76,7 +70,7 @@
 
         } catch (err) {
             statusBox.className = "status-box error";
-            statusBox.innerText = "Network Error! Check connection.";
+            statusBox.innerText = "Network Error! Could not read server.";
         }
     }
 </script>
