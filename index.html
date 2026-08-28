@@ -44,7 +44,6 @@
 </head>
 <body>
 
-<!-- स्टेप 1: मास्टर पासवर्ड स्क्रीन -->
 <div class="card" id="loginScreen">
     <h3>Admin Login</h3>
     <input type="password" id="adminPass" placeholder="Enter Login Password">
@@ -52,16 +51,13 @@
     <div id="loginError" class="error"></div>
 </div>
 
-<!-- स्टेप 2: मुख्य डैशबोर्ड -->
 <div class="card hidden" id="adminPanel">
-    
     <div class="top-nav-bar">
         <button class="btn-blue-nav" onclick="openKeyControlPage()">🌐 Key Control Page</button>
         <button class="btn-device-plus" onclick="openDeviceSyncPage()">Device +</button>
     </div>
 
     <h3>Server Dashboard</h3>
-    
     <div class="device-badge" id="myBuildBadge">Device Build ID: Loading...</div>
 
     <label>Custom Key Name:</label>
@@ -79,7 +75,6 @@
     <div class="sync-status" id="syncStatus">Status: Ready</div>
 </div>
 
-<!-- स्टेप 3: की-कंट्रोल पेज -->
 <div class="hidden full-page" id="keyControlPage">
     <div class="control-box">
         <button class="btn-back" onclick="closeKeyControlPage()">⬅ Back to Dashboard</button>
@@ -88,7 +83,6 @@
     </div>
 </div>
 
-<!-- स्टेप 4: डिवाइस सिंक पेज -->
 <div class="hidden full-page" id="deviceSyncPage">
     <div class="control-box">
         <button class="btn-back" onclick="closeDeviceSyncPage()">⬅ Back to Dashboard</button>
@@ -104,8 +98,6 @@
 
 <script>
     const MASTER_SERVER_PASSWORD = "AliAbbas2";
-
-    // GitHub API Settings (Updated with new token)
     const GITHUB_USER = "sabirkhan12441213-tech";
     const GITHUB_REPO = "vip-key-server";
     const GITHUB_PATH = "keys.json";
@@ -140,27 +132,17 @@
         document.getElementById('keyControlPage').classList.remove('hidden');
         fetchKeysFromGitHub();
     }
-
-    function closeKeyControlPage() {
-        document.getElementById('keyControlPage').classList.add('hidden');
-    }
+    function closeKeyControlPage() { document.getElementById('keyControlPage').classList.add('hidden'); }
 
     function openDeviceSyncPage() {
         document.getElementById('deviceSyncPage').classList.remove('hidden');
-        let linked = localStorage.getItem('linked_build_id') || 'None';
-        document.getElementById('activeLinkedBuild').innerText = linked;
+        document.getElementById('activeLinkedBuild').innerText = localStorage.getItem('linked_build_id') || 'None';
     }
-
-    function closeDeviceSyncPage() {
-        document.getElementById('deviceSyncPage').classList.add('hidden');
-    }
+    function closeDeviceSyncPage() { document.getElementById('deviceSyncPage').classList.add('hidden'); }
 
     function activateRemoteBuild() {
         let targetBuild = document.getElementById('targetBuildBox').value.trim();
-        if(!targetBuild) {
-            alert("Please enter a valid build number!");
-            return;
-        }
+        if(!targetBuild) { alert("Please enter a valid build number!"); return; }
         localStorage.setItem('linked_build_id', targetBuild);
         document.getElementById('activeLinkedBuild').innerText = targetBuild;
         alert("Server authorized successfully!");
@@ -176,7 +158,6 @@
                 renderKeys(data);
             }
         } catch(err) {
-            console.log("Using local cache due to network error");
             let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
             renderKeys(keys);
         }
@@ -185,13 +166,10 @@
     async function saveKeysToGitHub(keysArray) {
         const statusEl = document.getElementById('syncStatus');
         if(statusEl) statusEl.innerText = "Status: Syncing with GitHub...";
-
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
 
         try {
-            let getRes = await fetch(apiUrl, {
-                headers: { "Authorization": `token ${GITHUB_TOKEN}` }
-            });
+            let getRes = await fetch(apiUrl, { headers: { "Authorization": `token ${GITHUB_TOKEN}` } });
             let fileData = await getRes.json();
             let sha = fileData.sha;
 
@@ -200,15 +178,8 @@
 
             let putRes = await fetch(apiUrl, {
                 method: "PUT",
-                headers: {
-                    "Authorization": `token ${GITHUB_TOKEN}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    message: "Auto-update keys from Sabir Web Admin Panel",
-                    content: contentEncoded,
-                    sha: sha
-                })
+                headers: { "Authorization": `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "Auto-update keys from Admin Panel", content: contentEncoded, sha: sha })
             });
 
             if(putRes.ok) {
@@ -219,7 +190,6 @@
                 alert("GitHub Sync Failed! Check token or permissions.");
             }
         } catch(err) {
-            console.error(err);
             if(statusEl) statusEl.innerText = "Status: Network Error!";
         }
     }
@@ -227,21 +197,10 @@
     async function addNewKey() {
         const keyName = document.getElementById('customKey').value.trim();
         const durationHours = parseFloat(document.getElementById('durationSelect').value);
-
-        if(!keyName) {
-            alert("Please enter a key name!");
-            return;
-        }
+        if(!keyName) { alert("Please enter a key name!"); return; }
 
         let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-        
-        keys.push({
-            name: keyName,
-            durationHours: durationHours,
-            startTime: null,
-            boundDevice: null,
-            status: "active"
-        });
+        keys.push({ name: keyName, durationHours: durationHours, startTime: null, boundDevice: null, status: "active" });
 
         document.getElementById('customKey').value = "";
         await saveKeysToGitHub(keys);
@@ -267,74 +226,26 @@
         const container = document.getElementById('keyListContainer');
         if(!container) return;
         container.innerHTML = "";
-
-        if(keys.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:#64748b; font-size:12px;'>No keys found. Generate some keys first!</p>";
-            return;
-        }
+        if(keys.length === 0) { container.innerHTML = "<p style='text-align:center; color:#64748b; font-size:12px;'>No keys found.</p>"; return; }
 
         keys.forEach((k, index) => {
             let isBlocked = k.status === "blocked";
-            let boundDevText = k.boundDevice ? k.boundDevice : "Not Bound Yet";
             let item = document.createElement('div');
             item.className = `key-item ${isBlocked ? 'blocked' : ''}`;
             item.innerHTML = `
                 <div>
                     <strong style="color:#38bdf8; font-size:14px;">${k.name}</strong><br>
-                    <span class="timer" id="timer_${index}">Calculating...</span><br>
-                    <span style="font-size:11px; color:#94a3b8;">Device: ${boundDevText}</span><br>
-                    <span style="font-size:10px; color:${isBlocked ? '#ef4444' : '#22c55e'};">${isBlocked ? 'Status: BLOCKED' : 'Status: Active'}</span>
+                    <span class="timer" id="timer_${index}">Checking...</span><br>
+                    <span style="font-size:11px; color:#94a3b8;">Duration: ${k.durationHours} hrs</span><br>
+                    <span style="font-size:10px; color:${isBlocked ? '#ef4444' : '#22c55e'};">${isBlocked ? 'BLOCKED' : 'Active'}</span>
                 </div>
                 <div class="action-btns">
                     <button class="btn-block" onclick="toggleBlockKey(${index})">${isBlocked ? 'Unblock' : 'Block'}</button>
                     <button class="btn-delete" onclick="deleteKey(${index})">Delete</button>
-                </div>
-            `;
+                </div>`;
             container.appendChild(item);
         });
     }
-
-    setInterval(() => {
-        let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-        let now = Date.now();
-        let updated = false;
-
-        keys.forEach((k, index) => {
-            let timerElement = document.getElementById(`timer_${index}`);
-            if(timerElement) {
-                if(!k.startTime) {
-                    timerElement.innerText = "Waiting for First Login...";
-                    timerElement.style.color = "#f59e0b";
-                } else {
-                    let totalDurationMs = k.durationHours * 60 * 60 * 1000;
-                    let expiryTime = k.startTime + totalDurationMs;
-                    let timeLeft = expiryTime - now;
-
-                    if(timeLeft <= 0) {
-                        timerElement.innerText = "EXPIRED";
-                        timerElement.style.color = "#ef4444";
-                        k.status = "expired";
-                        updated = true;
-                    } else {
-                        let totalSecs = Math.floor(timeLeft / 1000);
-                        if(k.durationHours < 0.1) {
-                            timerElement.innerText = `${totalSecs}s remaining`;
-                        } else {
-                            let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                            let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                            timerElement.innerText = `${hours}h ${minutes}m ${seconds}s`;
-                        }
-                    }
-                }
-            }
-        });
-
-        if(updated) {
-            localStorage.setItem('admin_keys', JSON.stringify(keys));
-        }
-    }, 1000);
 </script>
-
 </body>
 </html>
