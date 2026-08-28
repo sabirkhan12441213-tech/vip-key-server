@@ -3,247 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro VPN Secure Remote Server</title>
+    <title>Pro VPN Admin Panel</title>
     <style>
         body { background-color: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 25px; border-radius: 12px; width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); position: relative; box-sizing: border-box; }
+        .card { background: #1e293b; padding: 25px; border-radius: 12px; width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); box-sizing: border-box; }
         input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box; font-family: monospace; font-size: 12px; }
         button { width: 100%; padding: 10px; background: #22c55e; border: none; border-radius: 6px; color: #fff; font-weight: bold; cursor: pointer; margin-top: 5px; }
         button:hover { background: #16a34a; }
         .error { color: #ef4444; font-size: 14px; margin-top: 10px; text-align: center; }
         .hidden { display: none !important; }
         h3 { text-align: center; margin-top: 0; }
-
-        .top-nav-bar { display: flex; gap: 8px; margin-bottom: 15px; }
-        .btn-blue-nav { background: #3b82f6 !important; font-size: 13px; flex: 1; margin: 0; }
-        .btn-device-plus { background: #8b5cf6 !important; font-size: 12px; width: auto; padding: 10px 12px; margin: 0; }
-
-        .full-page {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; box-sizing: border-box; padding: 20px;
-        }
-        .control-box {
-            width: 100%; max-width: 400px; background: #1e293b; padding: 20px; border-radius: 12px; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-        }
-        
-        .key-item { background: #090d16; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; border-left: 4px solid #22c55e; }
-        .key-item.blocked { border-left-color: #ef4444; opacity: 0.6; }
-        .timer { color: #38bdf8; font-weight: bold; font-family: monospace; font-size: 11px; }
-        
-        .action-btns { display: flex; gap: 5px; margin-top: 8px; }
-        .action-btns button { padding: 4px 8px; font-size: 11px; margin: 0; width: auto; flex: 1; }
-        .btn-block { background: #f59e0b; }
-        .btn-delete { background: #ef4444; }
-        .btn-back { background: #475569; margin-bottom: 15px; width: 100%; }
-        .btn-purple { background: #8b5cf6; }
-        .btn-purple:hover { background: #7c3aed; }
-        
-        .device-badge { background: #334155; padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px; color: #38bdf8; word-break: break-all; }
-        .sync-status { text-align: center; font-size: 11px; color: #38bdf8; margin-top: 8px; }
+        .key-box { background: #090d16; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 12px; color: #38bdf8; word-break: break-all; }
     </style>
 </head>
 <body>
 
 <div class="card" id="loginScreen">
     <h3>Admin Login</h3>
-    <input type="password" id="adminPass" placeholder="Enter Login Password">
+    <input type="password" id="adminPass" placeholder="Enter Password">
     <button onclick="checkAdminPassword()">Login</button>
     <div id="loginError" class="error"></div>
 </div>
 
 <div class="card hidden" id="adminPanel">
-    <div class="top-nav-bar">
-        <button class="btn-blue-nav" onclick="openKeyControlPage()">🌐 Key Control Page</button>
-        <button class="btn-device-plus" onclick="openDeviceSyncPage()">Device +</button>
-    </div>
-
-    <h3>Server Dashboard</h3>
-    <div class="device-badge" id="myBuildBadge">Device Build ID: Loading...</div>
-
-    <label>Custom Key Name:</label>
-    <input type="text" id="customKey" placeholder="e.g. KING-GAMER-01">
+    <h3>Key Generator</h3>
     
-    <label>Select Duration:</label>
+    <label>Key Name:</label>
+    <input type="text" id="customKey" placeholder="e.g. LG-KEY-01">
+    
+    <label>Duration:</label>
     <select id="durationSelect">
         <option value="0.001388">5 Seconds (Testing)</option>
         <option value="1">1 Hour</option>
-        <option value="3">3 Hours</option>
         <option value="24">1 Day (24 Hours)</option>
     </select>
 
-    <button onclick="addNewKey()">Generate Key</button>
-    <div class="sync-status" id="syncStatus">Status: Ready</div>
-</div>
-
-<div class="hidden full-page" id="keyControlPage">
-    <div class="control-box">
-        <button class="btn-back" onclick="closeKeyControlPage()">⬅ Back to Dashboard</button>
-        <h3>All Keys Control Panel</h3>
-        <div id="keyListContainer" style="margin-top: 15px;"></div>
-    </div>
-</div>
-
-<div class="hidden full-page" id="deviceSyncPage">
-    <div class="control-box">
-        <button class="btn-back" onclick="closeDeviceSyncPage()">⬅ Back to Dashboard</button>
-        <h3>Remote Build Authorization</h3>
-        <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">Enter Build Number to authorize this browser:</p>
-        <textarea id="targetBuildBox" rows="3" placeholder="Paste build number here..."></textarea>
-        <button class="btn-purple" onclick="activateRemoteBuild()">Authorize & Load Server</button>
-        <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
-        <p style="font-size: 12px; color: #94a3b8;">Currently Linked Build:</p>
-        <div class="device-badge" id="activeLinkedBuild" style="color: #22c55e;">None</div>
-    </div>
+    <button onclick="generateKey()">Generate & Copy JSON</button>
+    
+    <label style="margin-top:15px; display:block;">Copy this JSON to your GitHub keys.json:</label>
+    <textarea id="jsonOutput" rows="5" readonly placeholder="JSON data will appear here..."></textarea>
 </div>
 
 <script>
     const MASTER_SERVER_PASSWORD = "AliAbbas2";
-    const GITHUB_USER = "sabirkhan12441213-tech";
-    const GITHUB_REPO = "vip-key-server";
-    const GITHUB_PATH = "keys.json";
-    const GITHUB_TOKEN = "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";
-
-    function getOrSetDeviceBuildID() {
-        let buildId = localStorage.getItem('my_device_build_id');
-        if(!buildId) {
-            buildId = "BUILD_" + Math.random().toString(36).substring(2, 9).toUpperCase() + "_" + Date.now().toString(36);
-            localStorage.setItem('my_device_build_id', buildId);
-        }
-        return buildId;
-    }
-
-    window.onload = function() {
-        let myId = getOrSetDeviceBuildID();
-        document.getElementById('myBuildBadge').innerText = "My Build ID: " + myId;
-        fetchKeysFromGitHub();
-    };
 
     function checkAdminPassword() {
         const pass = document.getElementById('adminPass').value.trim();
         if(pass === MASTER_SERVER_PASSWORD) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
+            loadExistingKeys();
         } else {
             document.getElementById('loginError').innerText = "Wrong Password";
         }
     }
 
-    function openKeyControlPage() {
-        document.getElementById('keyControlPage').classList.remove('hidden');
-        fetchKeysFromGitHub();
-    }
-    function closeKeyControlPage() { document.getElementById('keyControlPage').classList.add('hidden'); }
-
-    function openDeviceSyncPage() {
-        document.getElementById('deviceSyncPage').classList.remove('hidden');
-        document.getElementById('activeLinkedBuild').innerText = localStorage.getItem('linked_build_id') || 'None';
-    }
-    function closeDeviceSyncPage() { document.getElementById('deviceSyncPage').classList.add('hidden'); }
-
-    function activateRemoteBuild() {
-        let targetBuild = document.getElementById('targetBuildBox').value.trim();
-        if(!targetBuild) { alert("Please enter a valid build number!"); return; }
-        localStorage.setItem('linked_build_id', targetBuild);
-        document.getElementById('activeLinkedBuild').innerText = targetBuild;
-        alert("Server authorized successfully!");
-        closeDeviceSyncPage();
+    function getKeys() {
+        return JSON.parse(localStorage.getItem('admin_keys_list') || '[]');
     }
 
-    async function fetchKeysFromGitHub() {
-        try {
-            let res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}?t=${Date.now()}`);
-            if(res.ok) {
-                let data = await res.json();
-                localStorage.setItem('admin_keys', JSON.stringify(data));
-                renderKeys(data);
-            }
-        } catch(err) {
-            let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-            renderKeys(keys);
-        }
+    function loadExistingKeys() {
+        let keys = getKeys();
+        document.getElementById('jsonOutput').value = JSON.stringify(keys, null, 2);
     }
 
-    async function saveKeysToGitHub(keysArray) {
-        const statusEl = document.getElementById('syncStatus');
-        if(statusEl) statusEl.innerText = "Status: Syncing with GitHub...";
-        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
-
-        try {
-            let getRes = await fetch(apiUrl, { headers: { "Authorization": `token ${GITHUB_TOKEN}` } });
-            let fileData = await getRes.json();
-            let sha = fileData.sha;
-
-            let jsonString = JSON.stringify(keysArray, null, 2);
-            let contentEncoded = btoa(unescape(encodeURIComponent(jsonString)));
-
-            let putRes = await fetch(apiUrl, {
-                method: "PUT",
-                headers: { "Authorization": `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ message: "Auto-update keys from Admin Panel", content: contentEncoded, sha: sha })
-            });
-
-            if(putRes.ok) {
-                if(statusEl) statusEl.innerText = "Status: Synced Successfully!";
-                localStorage.setItem('admin_keys', JSON.stringify(keysArray));
-            } else {
-                if(statusEl) statusEl.innerText = "Status: Sync Failed!";
-                alert("GitHub Sync Failed! Check token or permissions.");
-            }
-        } catch(err) {
-            if(statusEl) statusEl.innerText = "Status: Network Error!";
-        }
-    }
-
-    async function addNewKey() {
+    function generateKey() {
         const keyName = document.getElementById('customKey').value.trim();
         const durationHours = parseFloat(document.getElementById('durationSelect').value);
-        if(!keyName) { alert("Please enter a key name!"); return; }
 
-        let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-        keys.push({ name: keyName, durationHours: durationHours, startTime: null, boundDevice: null, status: "active" });
+        if(!keyName) {
+            alert("Please enter a key name!");
+            return;
+        }
 
+        let keys = getKeys();
+        if(keys.some(k => k.name === keyName)) {
+            alert("This key already exists!");
+            return;
+        }
+
+        keys.push({
+            name: keyName,
+            durationHours: durationHours,
+            startTime: null,
+            status: "active"
+        });
+
+        localStorage.setItem('admin_keys_list', JSON.stringify(keys));
+        
+        let jsonString = JSON.stringify(keys, null, 2);
+        document.getElementById('jsonOutput').value = jsonString;
         document.getElementById('customKey').value = "";
-        await saveKeysToGitHub(keys);
-        renderKeys(keys);
-        alert("Key Generated and Synced to GitHub Successfully!");
-    }
-
-    async function toggleBlockKey(index) {
-        let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-        keys[index].status = (keys[index].status === "active") ? "blocked" : "active";
-        await saveKeysToGitHub(keys);
-        renderKeys(keys);
-    }
-
-    async function deleteKey(index) {
-        let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-        keys.splice(index, 1);
-        await saveKeysToGitHub(keys);
-        renderKeys(keys);
-    }
-
-    function renderKeys(keys) {
-        const container = document.getElementById('keyListContainer');
-        if(!container) return;
-        container.innerHTML = "";
-        if(keys.length === 0) { container.innerHTML = "<p style='text-align:center; color:#64748b; font-size:12px;'>No keys found.</p>"; return; }
-
-        keys.forEach((k, index) => {
-            let isBlocked = k.status === "blocked";
-            let item = document.createElement('div');
-            item.className = `key-item ${isBlocked ? 'blocked' : ''}`;
-            item.innerHTML = `
-                <div>
-                    <strong style="color:#38bdf8; font-size:14px;">${k.name}</strong><br>
-                    <span class="timer" id="timer_${index}">Checking...</span><br>
-                    <span style="font-size:11px; color:#94a3b8;">Duration: ${k.durationHours} hrs</span><br>
-                    <span style="font-size:10px; color:${isBlocked ? '#ef4444' : '#22c55e'};">${isBlocked ? 'BLOCKED' : 'Active'}</span>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-block" onclick="toggleBlockKey(${index})">${isBlocked ? 'Unblock' : 'Block'}</button>
-                    <button class="btn-delete" onclick="deleteKey(${index})">Delete</button>
-                </div>`;
-            container.appendChild(item);
+        
+        // ऑटोमेटिक क्लिपबोर्ड पर कॉपी करने की कोशिश
+        navigator.clipboard.writeText(jsonString).then(() => {
+            alert("Key generated & JSON copied to clipboard! Now paste it into your GitHub keys.json file.");
+        }).catch(() => {
+            alert("Key generated! Copy the JSON from the box below.");
         });
     }
 </script>
