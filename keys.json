@@ -1,0 +1,9 @@
+[
+  {
+    "name": "VIP-TEST-123",
+    "status": "active",
+    "boundDevice": "",
+    "startTime": 0,
+    "durationHours": 24
+  }
+]
