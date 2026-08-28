@@ -1,9 +1,87 @@
-[
-  {
-    "name": "VIP-TEST-123",
-    "status": "active",
-    "boundDevice": "",
-    "startTime": 0,
-    "durationHours": 24
-  }
-]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOS Remote Key Verifier</title>
+    <style>
+        body { background-color: #0b0f19; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .gos-card { background: #161e2e; padding: 25px; border-radius: 12px; width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); border: 1px solid #334155; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #475569; background: #0b0f19; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #3b82f6; border: none; border-radius: 6px; color: #fff; font-weight: bold; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        .status-box { margin-top: 15px; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; }
+        .success { background: #065f46; color: #6ee7b7; }
+        .error { background: #7f1d1d; color: #fca5a5; }
+    </style>
+</head>
+<body>
+
+<div class="gos-card">
+    <h3 style="text-align:center; margin-top:0;">GOS Server Activation</h3>
+    <p style="font-size: 11px; color: #94a3b8; text-align:center;">Enter generated key from admin panel:</p>
+    
+    <input type="text" id="enteredKey" placeholder="Enter Key Name (e.g. Ali12)">
+    <button onclick="verifyAndActivateKey()">Activate Key</button>
+    
+    <div id="gosStatus" class="status-box" style="display:none;"></div>
+</div>
+
+<script>
+    const GITHUB_USER = "sabirkhan12441213-tech";
+    const GITHUB_REPO = "vip-key-server";
+    const GITHUB_PATH = "keys.json";
+
+    async function verifyAndActivateKey() {
+        const inputKey = document.getElementById('enteredKey').value.trim();
+        const statusBox = document.getElementById('gosStatus');
+        
+        if(!inputKey) {
+            statusBox.style.display = "block";
+            statusBox.className = "status-box error";
+            statusBox.innerText = "Please enter a key!";
+            return;
+        }
+
+        statusBox.style.display = "block";
+        statusBox.className = "status-box";
+        statusBox.innerText = "Checking key from remote server...";
+
+        try {
+            // GOS सीधे GitHub से keys.json को फेッチ (Read) कर रहा है
+            let res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}?t=${Date.now()}`);
+            if(!res.ok) throw new Error("Could not fetch server keys.");
+
+            let keys = await res.json();
+            let foundKey = keys.find(k => k.name === inputKey);
+
+            if(!foundKey) {
+                statusBox.className = "status-box error";
+                statusBox.innerText = "Invalid Key! Key not found on server.";
+                return;
+            }
+
+            if(foundKey.status === "blocked") {
+                statusBox.className = "status-box error";
+                statusBox.innerText = "This key has been blocked by Admin!";
+                return;
+            }
+
+            // अगर की सही है और पहली बार एक्टिवेट हो रही है, तो समय सेट करें
+            if(!foundKey.startTime) {
+                foundKey.startTime = Date.now();
+                // यहाँ आप चाहें तो अपडेटेड डेटा वापस GitHub पर भी भेज सकते हैं ताकि GOS को पता चल जाए
+            }
+
+            statusBox.className = "status-box success";
+            statusBox.innerText = `Key Activated Successfully! Duration: ${foundKey.durationHours} hours.`;
+
+        } catch (err) {
+            statusBox.className = "status-box error";
+            statusBox.innerText = "Network Error! Check connection.";
+        }
+    }
+</script>
+
+</body>
+</html>
