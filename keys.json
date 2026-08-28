@@ -31,6 +31,7 @@
     const GITHUB_USER = "sabirkhan12441213-tech";
     const GITHUB_REPO = "vip-key-server";
     const GITHUB_PATH = "keys.json";
+    const GITHUB_TOKEN = "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";
 
     async function verifyAndActivateKey() {
         const inputKey = document.getElementById('enteredKey').value.trim();
@@ -48,7 +49,6 @@
         statusBox.innerText = "Checking key from remote server...";
 
         try {
-            // GOS सीधे GitHub से keys.json को फेッチ (Read) कर रहा है
             let res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}?t=${Date.now()}`);
             if(!res.ok) throw new Error("Could not fetch server keys.");
 
@@ -67,10 +67,8 @@
                 return;
             }
 
-            // अगर की सही है और पहली बार एक्टिवेट हो रही है, तो समय सेट करें
             if(!foundKey.startTime) {
                 foundKey.startTime = Date.now();
-                // यहाँ आप चाहें तो अपडेटेड डेटा वापस GitHub पर भी भेज सकते हैं ताकि GOS को पता चल जाए
             }
 
             statusBox.className = "status-box success";
