@@ -26,11 +26,12 @@
             width: 100%; max-width: 400px; background: #1e293b; padding: 20px; border-radius: 12px; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
         }
         
-        .key-item { background: #090d16; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #22c55e; }
+        .key-item { background: #090d16; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; border-left: 4px solid #22c55e; }
         .key-item.blocked { border-left-color: #ef4444; opacity: 0.6; }
         .timer { color: #38bdf8; font-weight: bold; font-family: monospace; font-size: 11px; }
         
-        .action-btns button { padding: 4px 8px; font-size: 11px; margin-left: 4px; width: auto; }
+        .action-btns { display: flex; gap: 5px; margin-top: 8px; }
+        .action-btns button { padding: 4px 8px; font-size: 11px; margin: 0; width: auto; flex: 1; }
         .btn-block { background: #f59e0b; }
         .btn-delete { background: #ef4444; }
         .btn-back { background: #475569; margin-bottom: 15px; width: 100%; }
@@ -55,7 +56,7 @@
     
     <div class="top-nav-bar">
         <button class="btn-blue-nav" onclick="openKeyControlPage()">🌐 Key Control Page</button>
-        <button class="btn-device-plus" onclick="openDeviceSyncPage()">Device + (Build No.)</button>
+        <button class="btn-device-plus" onclick="openDeviceSyncPage()">Device +</button>
     </div>
 
     <h3>Server Dashboard</h3>
@@ -63,11 +64,11 @@
     <div class="device-badge" id="myBuildBadge">Device Build ID: Loading...</div>
 
     <label>Custom Key Name:</label>
-    <input type="text" id="customKey" placeholder="e.g. VIP-KEY-01">
+    <input type="text" id="customKey" placeholder="e.g. KING-GAMER-01">
     
     <label>Select Duration:</label>
     <select id="durationSelect">
-        <option value="0.0833">5 Seconds (Testing)</option>
+        <option value="0.001388">5 Seconds (Testing)</option>
         <option value="1">1 Hour</option>
         <option value="3">3 Hours</option>
         <option value="24">1 Day (24 Hours)</option>
@@ -85,18 +86,15 @@
     </div>
 </div>
 
-<!-- स्टेप 4: बिल्ड नंबर डालकर सर्वर एक्टिवेट करने का पेज -->
+<!-- स्टेप 4: डिवाइस सिंक पेज -->
 <div class="hidden full-page" id="deviceSyncPage">
     <div class="control-box">
         <button class="btn-back" onclick="closeDeviceSyncPage()">⬅ Back to Dashboard</button>
         <h3>Remote Build Authorization</h3>
-        
-        <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">Enter Build Number to activate server on this browser via link:</p>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">Enter Build Number to authorize this browser:</p>
         <textarea id="targetBuildBox" rows="3" placeholder="Paste build number here..."></textarea>
         <button class="btn-purple" onclick="activateRemoteBuild()">Authorize & Load Server</button>
-
         <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
-
         <p style="font-size: 12px; color: #94a3b8;">Currently Linked Build:</p>
         <div class="device-badge" id="activeLinkedBuild" style="color: #22c55e;">None</div>
     </div>
@@ -154,10 +152,9 @@
             alert("Please enter a valid build number!");
             return;
         }
-
         localStorage.setItem('linked_build_id', targetBuild);
         document.getElementById('activeLinkedBuild').innerText = targetBuild;
-        alert("Server successfully authorized and loaded via link using Build Number!");
+        alert("Server authorized successfully!");
         closeDeviceSyncPage();
     }
 
@@ -180,13 +177,14 @@
         keys.push({
             name: keyName,
             durationHours: durationHours,
-            startTime: null, // जब तक ऐप में लॉगिन नहीं होगी, तब तक null रहेगा
+            startTime: null,
+            boundDevice: null,
             status: "active"
         });
 
         localStorage.setItem('admin_keys', JSON.stringify(keys));
         document.getElementById('customKey').value = "";
-        alert("Key Generated Successfully! Timer will start only after first login.");
+        alert("Key Generated Successfully!");
     }
 
     function toggleBlockKey(index) {
@@ -214,12 +212,14 @@
 
         keys.forEach((k, index) => {
             let isBlocked = k.status === "blocked";
+            let boundDevText = k.boundDevice ? k.boundDevice : "Not Bound Yet";
             let item = document.createElement('div');
             item.className = `key-item ${isBlocked ? 'blocked' : ''}`;
             item.innerHTML = `
                 <div>
-                    <strong>${k.name}</strong><br>
+                    <strong style="color:#38bdf8; font-size:14px;">${k.name}</strong><br>
                     <span class="timer" id="timer_${index}">Calculating...</span><br>
+                    <span style="font-size:11px; color:#94a3b8;">Device: ${boundDevText}</span><br>
                     <span style="font-size:10px; color:${isBlocked ? '#ef4444' : '#22c55e'};">${isBlocked ? 'Status: BLOCKED' : 'Status: Active'}</span>
                 </div>
                 <div class="action-btns">
@@ -239,7 +239,6 @@
         keys.forEach((k, index) => {
             let timerElement = document.getElementById(`timer_${index}`);
             if(timerElement) {
-                // अगर की अभी तक एक्टिवेट नहीं हुई है (Testing के लिए मान लीजिए पहली बार सिमुलेशन या जब ऐप वैलिडेट करे)
                 if(!k.startTime) {
                     timerElement.innerText = "Waiting for First Login...";
                     timerElement.style.color = "#f59e0b";
@@ -254,14 +253,13 @@
                         k.status = "expired";
                         updated = true;
                     } else {
-                        let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                        let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                        
-                        if(k.durationHours < 1) { // अगर 5 सेकंड वाली टेस्टिंग की है तो मिनट/सेकंड साफ़ दिखे
-                            let totalSecs = Math.floor(timeLeft / 1000);
+                        let totalSecs = Math.floor(timeLeft / 1000);
+                        if(k.durationHours < 0.1) {
                             timerElement.innerText = `${totalSecs}s remaining`;
                         } else {
+                            let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                            let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
                             timerElement.innerText = `${hours}h ${minutes}m ${seconds}s`;
                         }
                     }
