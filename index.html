@@ -67,6 +67,7 @@
     
     <label>Select Duration:</label>
     <select id="durationSelect">
+        <option value="0.0833">5 Seconds (Testing)</option>
         <option value="1">1 Hour</option>
         <option value="3">3 Hours</option>
         <option value="24">1 Day (24 Hours)</option>
@@ -167,7 +168,7 @@
 
     function addNewKey() {
         const keyName = document.getElementById('customKey').value.trim();
-        const hours = parseInt(document.getElementById('durationSelect').value);
+        const durationHours = parseFloat(document.getElementById('durationSelect').value);
 
         if(!keyName) {
             alert("Please enter a key name!");
@@ -175,17 +176,17 @@
         }
 
         let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
-        let expiryTime = Date.now() + (hours * 60 * 60 * 1000);
         
         keys.push({
             name: keyName,
-            expiry: expiryTime,
+            durationHours: durationHours,
+            startTime: null, // जब तक ऐप में लॉगिन नहीं होगी, तब तक null रहेगा
             status: "active"
         });
 
         localStorage.setItem('admin_keys', JSON.stringify(keys));
         document.getElementById('customKey').value = "";
-        alert("Key Generated Successfully on Remote Server!");
+        alert("Key Generated Successfully! Timer will start only after first login.");
     }
 
     function toggleBlockKey(index) {
@@ -233,23 +234,44 @@
     setInterval(() => {
         let keys = JSON.parse(localStorage.getItem('admin_keys') || '[]');
         let now = Date.now();
+        let updated = false;
 
         keys.forEach((k, index) => {
             let timerElement = document.getElementById(`timer_${index}`);
             if(timerElement) {
-                let timeLeft = k.expiry - now;
-                if(timeLeft <= 0) {
-                    timerElement.innerText = "EXPIRED";
-                    timerElement.style.color = "#ef4444";
+                // अगर की अभी तक एक्टिवेट नहीं हुई है (Testing के लिए मान लीजिए पहली बार सिमुलेशन या जब ऐप वैलिडेट करे)
+                if(!k.startTime) {
+                    timerElement.innerText = "Waiting for First Login...";
+                    timerElement.style.color = "#f59e0b";
                 } else {
-                    let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                    let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                    
-                    timerElement.innerText = `${hours}h ${minutes}m ${seconds}s`;
+                    let totalDurationMs = k.durationHours * 60 * 60 * 1000;
+                    let expiryTime = k.startTime + totalDurationMs;
+                    let timeLeft = expiryTime - now;
+
+                    if(timeLeft <= 0) {
+                        timerElement.innerText = "EXPIRED";
+                        timerElement.style.color = "#ef4444";
+                        k.status = "expired";
+                        updated = true;
+                    } else {
+                        let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                        let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                        
+                        if(k.durationHours < 1) { // अगर 5 सेकंड वाली टेस्टिंग की है तो मिनट/सेकंड साफ़ दिखे
+                            let totalSecs = Math.floor(timeLeft / 1000);
+                            timerElement.innerText = `${totalSecs}s remaining`;
+                        } else {
+                            timerElement.innerText = `${hours}h ${minutes}m ${seconds}s`;
+                        }
+                    }
                 }
             }
         });
+
+        if(updated) {
+            localStorage.setItem('admin_keys', JSON.stringify(keys));
+        }
     }, 1000);
 </script>
 
