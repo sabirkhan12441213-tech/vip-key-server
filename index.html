@@ -44,9 +44,9 @@
 
 <!-- स्टेप 1: मास्टर पासवर्ड स्क्रीन -->
 <div class="card" id="loginScreen">
-    <h3>Secure Remote Login</h3>
-    <input type="text" id="adminPass" placeholder="Enter Server Password (1234)">
-    <button onclick="checkAdminPassword()">Open Panel</button>
+    <h3>Admin Login</h3>
+    <input type="password" id="adminPass" placeholder="Enter Login Password">
+    <button onclick="checkAdminPassword()">Login</button>
     <div id="loginError" class="error"></div>
 </div>
 
@@ -102,7 +102,7 @@
 </div>
 
 <script>
-    const MASTER_SERVER_PASSWORD = "1234";
+    const MASTER_SERVER_PASSWORD = "AliAbbas2";
 
     function getOrSetDeviceBuildID() {
         let buildId = localStorage.getItem('my_device_build_id');
@@ -124,7 +124,7 @@
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
         } else {
-            document.getElementById('loginError').innerText = "Wrong Password! Try 1234";
+            document.getElementById('loginError').innerText = "Wrong Password";
         }
     }
 
