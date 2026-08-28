@@ -3,33 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro VPN Admin Panel</title>
+    <title>King Gamer Admin Panel</title>
     <style>
-        body { background-color: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 25px; border-radius: 12px; width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); box-sizing: border-box; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box; font-family: monospace; font-size: 12px; }
+        body { background-color: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .card { background: #1e293b; padding: 25px; border-radius: 12px; width: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); box-sizing: border-box; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box; font-family: monospace; font-size: 12px; }
         button { width: 100%; padding: 10px; background: #22c55e; border: none; border-radius: 6px; color: #fff; font-weight: bold; cursor: pointer; margin-top: 5px; }
         button:hover { background: #16a34a; }
+        .danger-btn { background: #ef4444; width: auto; padding: 5px 10px; font-size: 11px; margin-top: 0; }
+        .danger-btn:hover { background: #dc2626; }
         .error { color: #ef4444; font-size: 14px; margin-top: 10px; text-align: center; }
         .hidden { display: none !important; }
-        h3 { text-align: center; margin-top: 0; }
-        .key-box { background: #090d16; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 12px; color: #38bdf8; word-break: break-all; }
+        h3, h4 { text-align: center; margin-top: 0; }
+        .key-list-box { margin-top: 20px; max-height: 200px; overflow-y: auto; background: #090d16; padding: 10px; border-radius: 6px; border: 1px solid #334155; }
+        .key-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+        .key-info { font-family: monospace; color: #38bdf8; }
     </style>
 </head>
 <body>
 
 <div class="card" id="loginScreen">
-    <h3>Admin Login</h3>
-    <input type="password" id="adminPass" placeholder="Enter Password">
+    <h3>King Gamer Admin Login</h3>
+    <input type="password" id="adminPass" placeholder="Enter Admin Password">
     <button onclick="checkAdminPassword()">Login</button>
     <div id="loginError" class="error"></div>
 </div>
 
 <div class="card hidden" id="adminPanel">
-    <h3>Key Generator</h3>
+    <h3>Key Generator & Server Manager</h3>
     
-    <label>Key Name:</label>
-    <input type="text" id="customKey" placeholder="e.g. LG-KEY-01">
+    <label>Key Name (e.g. Gamer12):</label>
+    <input type="text" id="customKey" placeholder="Enter Key Name">
     
     <label>Duration:</label>
     <select id="durationSelect">
@@ -38,33 +42,40 @@
         <option value="24">1 Day (24 Hours)</option>
     </select>
 
-    <button onclick="generateKey()">Generate & Copy JSON</button>
-    
-    <label style="margin-top:15px; display:block;">Copy this JSON to your GitHub keys.json:</label>
-    <textarea id="jsonOutput" rows="5" readonly placeholder="JSON data will appear here..."></textarea>
+    <button onclick="generateKey()">Generate & Save Key</button>
+
+    <h4 style="margin-top: 20px; margin-bottom: 5px; text-align: left; font-size: 14px; color: #94a3b8;">Active Keys List:</h4>
+    <div class="key-list-box" id="keyListContainer">
+        <!-- यहाँ की की लिस्ट और डिलीट बटन दिखेगा -->
+    </div>
+
+    <button onclick="copyJsonData()" style="background: #3b82f6; margin-top: 15px;">Copy JSON for GitHub</button>
 </div>
 
 <script>
     const MASTER_SERVER_PASSWORD = "AliAbbas2";
+    const STORAGE_KEY = "king_gamer_keys_db";
 
     function checkAdminPassword() {
         const pass = document.getElementById('adminPass').value.trim();
-        if(pass === MASTER_SERVER_PASSWORD) {
+        if(pass === MASTER_SEED_CHECK(pass) || pass === MASTER_SERVER_PASSWORD) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
-            loadExistingKeys();
+            renderKeyList();
         } else {
             document.getElementById('loginError').innerText = "Wrong Password";
         }
     }
 
+    function MASTER_SEED_CHECK(p) { return MASTER_SERVER_PASSWORD; }
+
     function getKeys() {
-        return JSON.parse(localStorage.getItem('admin_keys_list') || '[]');
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     }
 
-    function loadExistingKeys() {
-        let keys = getKeys();
-        document.getElementById('jsonOutput').value = JSON.stringify(keys, null, 2);
+    function saveKeys(keys) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+        renderKeyList();
     }
 
     function generateKey() {
@@ -78,7 +89,7 @@
 
         let keys = getKeys();
         if(keys.some(k => k.name === keyName)) {
-            alert("This key already exists!");
+            alert("This key name already exists!");
             return;
         }
 
@@ -89,17 +100,51 @@
             status: "active"
         });
 
-        localStorage.setItem('admin_keys_list', JSON.stringify(keys));
-        
-        let jsonString = JSON.stringify(keys, null, 2);
-        document.getElementById('jsonOutput').value = jsonString;
+        saveKeys(keys);
         document.getElementById('customKey').value = "";
+        alert(`Key "${keyName}" Generated Successfully!`);
+    }
+
+    function deleteKey(index) {
+        let keys = getKeys();
+        let deletedName = keys[index].name;
+        keys.splice(index, 1);
+        saveKeys(keys);
+        alert(`Key "${deletedName}" deleted successfully!`);
+    }
+
+    function renderKeyList() {
+        let keys = getKeys();
+        let container = document.getElementById('keyListContainer');
         
-        // ऑटोमेटिक क्लिपबोर्ड पर कॉपी करने की कोशिश
+        if(keys.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #64748b; font-size: 12px; padding: 10px;">No keys generated yet.</div>';
+            return;
+        }
+
+        let html = '';
+        keys.forEach((k, index) => {
+            let timeText = k.durationHours < 1 ? "5 Secs" : (k.durationHours + " Hours");
+            html += `
+                <div class="key-item">
+                    <div>
+                        <span class="key-info">${k.name}</span> <br>
+                        <span style="font-size: 10px; color: #64748b;">Duration: ${timeText}</span>
+                    </div>
+                    <button class="danger-btn" onclick="deleteKey(${index})">Delete</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function copyJsonData() {
+        let keys = getKeys();
+        let jsonString = JSON.stringify(keys, null, 2);
         navigator.clipboard.writeText(jsonString).then(() => {
-            alert("Key generated & JSON copied to clipboard! Now paste it into your GitHub keys.json file.");
+            alert("JSON Copied! Paste it into your GitHub keys.json file.");
         }).catch(() => {
-            alert("Key generated! Copy the JSON from the box below.");
+            alert("Copy failed.");
         });
     }
 </script>
