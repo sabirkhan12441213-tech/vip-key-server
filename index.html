@@ -1,152 +1,708 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>King Gamer Admin Panel</title>
-    <style>
-        body { background-color: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .card { background: #1e293b; padding: 25px; border-radius: 12px; width: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); box-sizing: border-box; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box; font-family: monospace; font-size: 12px; }
-        button { width: 100%; padding: 10px; background: #22c55e; border: none; border-radius: 6px; color: #fff; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        button:hover { background: #16a34a; }
-        .danger-btn { background: #ef4444; width: auto; padding: 5px 10px; font-size: 11px; margin-top: 0; }
-        .danger-btn:hover { background: #dc2626; }
-        .error { color: #ef4444; font-size: 14px; margin-top: 10px; text-align: center; }
-        .hidden { display: none !important; }
-        h3, h4 { text-align: center; margin-top: 0; }
-        .key-list-box { margin-top: 20px; max-height: 200px; overflow-y: auto; background: #090d16; padding: 10px; border-radius: 6px; border: 1px solid #334155; }
-        .key-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
-        .key-info { font-family: monospace; color: #38bdf8; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>GAMER KING V2</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: #000;
+    color: white;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden;
+}
+
+.page {
+    width: min(900px, 100%);
+    min-height: 100vh;
+    padding: 38px 22px 40px;
+}
+
+/* TOP */
+
+.top-dot {
+    width: 38px;
+    height: 38px;
+    border: 3px solid #eee;
+    border-radius: 50%;
+    margin-left: 58px;
+    margin-bottom: 34px;
+    box-shadow: 0 0 8px rgba(255,255,255,.35);
+}
+
+.top-line {
+    width: 82%;
+    height: 2px;
+    background: #282828;
+    margin: 0 auto 62px;
+}
+
+/* MAIN */
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* AVATAR */
+
+.avatar-wrap {
+    width: 355px;
+    height: 355px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #07101b;
+
+    box-shadow:
+        0 0 25px rgba(120,0,0,.35),
+        0 0 60px rgba(0,80,255,.12);
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* TITLE */
+
+h1 {
+    margin: 72px 0 18px;
+
+    text-align: center;
+
+    font-size: 42px;
+    letter-spacing: 3px;
+
+    color: #e83cff;
+
+    text-shadow:
+        0 0 8px rgba(232,60,255,.75),
+        0 0 22px rgba(125,0,255,.4);
+}
+
+.version {
+    margin-bottom: 65px;
+
+    font-size: 30px;
+    letter-spacing: 3px;
+
+    color: #00aaff;
+
+    text-shadow:
+        0 0 10px rgba(0,170,255,.8);
+}
+
+/* DISPLAY BOX */
+
+.generate-box {
+    width: min(650px, 90%);
+    min-height: 112px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #171d25;
+    border-radius: 12px;
+
+    color: #aeb6c1;
+
+    font-size: 25px;
+
+    box-shadow:
+        inset 0 0 22px rgba(0,30,50,.35),
+        0 0 12px rgba(0,30,255,.08);
+
+    margin-bottom: 38px;
+}
+
+/* KEY AREA */
+
+.key-area {
+    width: min(650px, 90%);
+
+    display: none;
+
+    gap: 10px;
+
+    margin: -8px 0 30px;
+}
+
+.key-output {
+    flex: 1;
+
+    min-height: 54px;
+
+    background: #07090d;
+
+    border: 1px solid #087ca5;
+    border-radius: 8px;
+
+    color: #5ed9ff;
+
+    padding: 13px;
+
+    font-family: inherit;
+    font-size: 17px;
+
+    outline: none;
+
+    box-shadow:
+        0 0 10px rgba(0,170,255,.12);
+}
+
+/* BUTTONS */
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    transition: .18s ease;
+}
+
+/* GENERATE */
+
+.generate-btn {
+    width: min(440px, 80%);
+    height: 76px;
+
+    border: 2px solid #00b9ff;
+    border-radius: 14px;
+
+    background: #02070b;
+
+    color: #08bfff;
+
+    font-size: 25px;
+    font-weight: bold;
+
+    letter-spacing: 1px;
+
+    box-shadow:
+        0 0 9px rgba(0,185,255,.35),
+        inset 0 0 15px rgba(0,185,255,.07);
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 0 20px rgba(0,185,255,.65),
+        inset 0 0 18px rgba(0,185,255,.15);
+}
+
+.generate-btn:active {
+    transform: scale(.98);
+}
+
+/* COPY */
+
+.copy-btn {
+    padding: 0 20px;
+
+    border: 1px solid #a72cff;
+    border-radius: 8px;
+
+    background: #100318;
+
+    color: #e65cff;
+
+    font-size: 16px;
+}
+
+.copy-btn:hover {
+    box-shadow: 0 0 15px rgba(167,44,255,.55);
+}
+
+/* TELEGRAM */
+
+.telegram {
+    width: min(700px, 94%);
+
+    margin-top: 58px;
+
+    padding: 28px 20px;
+
+    text-align: center;
+
+    border: 1px solid #17101e;
+    border-radius: 14px;
+
+    box-shadow:
+        inset 0 0 30px rgba(120,0,160,.12);
+}
+
+.telegram-title {
+    margin-bottom: 25px;
+
+    color: #e83cff;
+
+    font-size: 23px;
+
+    text-shadow:
+        0 0 9px rgba(232,60,255,.5);
+}
+
+.heart {
+    margin-right: 10px;
+
+    color: #ff3e4f;
+
+    font-size: 27px;
+}
+
+/* JOIN */
+
+.join-btn {
+    padding: 13px 52px;
+
+    border: 1px solid #7d18a8;
+    border-radius: 8px;
+
+    background: #16051c;
+
+    color: #ee7bff;
+
+    font-size: 18px;
+
+    box-shadow:
+        0 0 12px rgba(138,0,170,.2);
+}
+
+.join-btn:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 0 20px rgba(192,0,255,.4);
+}
+
+/* DONE */
+
+.status {
+    position: fixed;
+
+    right: 24px;
+    bottom: 22px;
+
+    padding: 14px 30px;
+
+    border: none;
+    border-radius: 30px;
+
+    background: #3265b6;
+
+    color: white;
+
+    font-size: 18px;
+
+    box-shadow:
+        0 4px 16px rgba(0,0,0,.7);
+}
+
+.status:hover {
+    background: #4078ce;
+}
+
+/* TOAST */
+
+.toast {
+    position: fixed;
+
+    left: 50%;
+    bottom: 28px;
+
+    transform: translate(-50%, 20px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    background: #111722;
+
+    border: 1px solid #00aaff;
+
+    color: #7de2ff;
+
+    border-radius: 8px;
+
+    padding: 12px 18px;
+
+    transition: .25s;
+}
+
+.toast.show {
+    opacity: 1;
+
+    transform: translate(-50%, 0);
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+    .page {
+        padding-top: 25px;
+    }
+
+    .top-dot {
+        margin-left: 8px;
+    }
+
+    .avatar-wrap {
+        width: 275px;
+        height: 275px;
+    }
+
+    h1 {
+        margin-top: 54px;
+
+        font-size: 27px;
+
+        letter-spacing: 2px;
+    }
+
+    .version {
+        font-size: 22px;
+
+        margin-bottom: 45px;
+    }
+
+    .generate-box {
+        min-height: 92px;
+
+        font-size: 18px;
+    }
+
+    .generate-btn {
+        height: 64px;
+
+        font-size: 19px;
+    }
+
+    .key-area {
+        flex-direction: column;
+    }
+
+    .copy-btn {
+        height: 48px;
+    }
+
+    .telegram-title {
+        font-size: 17px;
+    }
+
+    .status {
+        right: 15px;
+        bottom: 15px;
+
+        padding: 11px 22px;
+    }
+}
+</style>
 </head>
+
 <body>
 
-<div class="card" id="loginScreen">
-    <h3>King Gamer Admin Login</h3>
-    <input type="password" id="adminPass" placeholder="Enter Admin Password">
-    <button onclick="checkAdminPassword()">Login</button>
-    <div id="loginError" class="error"></div>
+<div class="page">
+
+    <!-- TOP -->
+    <div class="top-dot"></div>
+
+    <div class="top-line"></div>
+
+
+    <main class="hero">
+
+        <!-- AVATAR -->
+        <div class="avatar-wrap">
+
+            <!-- Screenshot wali image -->
+            <img
+                class="avatar"
+                src="926311.jpg"
+                alt="Anime Avatar"
+            >
+
+        </div>
+
+
+        <!-- TITLE -->
+
+        <h1>GAMER KING</h1>
+
+        <div class="version">
+            V2 — GAMER KING
+        </div>
+
+
+        <!-- DISPLAY -->
+
+        <div
+            class="generate-box"
+            id="display"
+        >
+            — Press Generate —
+        </div>
+
+
+        <!-- GENERATED KEY -->
+
+        <div
+            class="key-area"
+            id="keyArea"
+        >
+
+            <input
+                class="key-output"
+                id="keyOutput"
+                readonly
+            >
+
+            <button
+                class="copy-btn"
+                id="copyBtn"
+            >
+                COPY
+            </button>
+
+        </div>
+
+
+        <!-- GENERATE -->
+
+        <button
+            class="generate-btn"
+            id="generateBtn"
+        >
+            GENERATE KEY
+        </button>
+
+
+        <!-- TELEGRAM -->
+
+        <section class="telegram">
+
+            <div class="telegram-title">
+
+                <span class="heart">
+                    ♥
+                </span>
+
+                Any Problem? Join Telegram!
+
+            </div>
+
+
+            <button
+                class="join-btn"
+                id="joinBtn"
+            >
+                Join Now
+            </button>
+
+        </section>
+
+    </main>
+
+
+    <!-- DONE -->
+
+    <button
+        class="status"
+        id="doneBtn"
+    >
+        Done
+    </button>
+
+
+    <!-- TOAST -->
+
+    <div
+        class="toast"
+        id="toast"
+    ></div>
+
 </div>
 
-<div class="card hidden" id="adminPanel">
-    <h3>Key Generator & Server Manager</h3>
-    
-    <label>Key Name (e.g. Gamer12):</label>
-    <input type="text" id="customKey" placeholder="Enter Key Name">
-    
-    <label>Duration:</label>
-    <select id="durationSelect">
-        <option value="0.001388">5 Seconds (Testing)</option>
-        <option value="1">1 Hour</option>
-        <option value="24">1 Day (24 Hours)</option>
-    </select>
-
-    <button onclick="generateKey()">Generate & Save Key</button>
-
-    <h4 style="margin-top: 20px; margin-bottom: 5px; text-align: left; font-size: 14px; color: #94a3b8;">Active Keys List:</h4>
-    <div class="key-list-box" id="keyListContainer">
-        <!-- यहाँ की की लिस्ट और डिलीट बटन दिखेगा -->
-    </div>
-
-    <button onclick="copyJsonData()" style="background: #3b82f6; margin-top: 15px;">Copy JSON for GitHub</button>
-</div>
 
 <script>
-    const MASTER_SERVER_PASSWORD = "AliAbbas2";
-    const STORAGE_KEY = "king_gamer_keys_db";
 
-    function checkAdminPassword() {
-        const pass = document.getElementById('adminPass').value.trim();
-        if(pass === MASTER_SEED_CHECK(pass) || pass === MASTER_SERVER_PASSWORD) {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('adminPanel').classList.remove('hidden');
-            renderKeyList();
-        } else {
-            document.getElementById('loginError').innerText = "Wrong Password";
-        }
-    }
+/* ELEMENTS */
 
-    function MASTER_SEED_CHECK(p) { return MASTER_SERVER_PASSWORD; }
+const display =
+    document.getElementById("display");
 
-    function getKeys() {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    }
+const keyArea =
+    document.getElementById("keyArea");
 
-    function saveKeys(keys) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
-        renderKeyList();
-    }
+const keyOutput =
+    document.getElementById("keyOutput");
 
-    function generateKey() {
-        const keyName = document.getElementById('customKey').value.trim();
-        const durationHours = parseFloat(document.getElementById('durationSelect').value);
+const toast =
+    document.getElementById("toast");
 
-        if(!keyName) {
-            alert("Please enter a key name!");
-            return;
-        }
 
-        let keys = getKeys();
-        if(keys.some(k => k.name === keyName)) {
-            alert("This key name already exists!");
-            return;
+/* RANDOM KEY GENERATOR */
+
+function makeKey() {
+
+    const chars =
+        "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    function part(length) {
+
+        let result = "";
+
+        for (let i = 0; i < length; i++) {
+
+            result += chars[
+                Math.floor(
+                    Math.random() * chars.length
+                )
+            ];
+
         }
 
-        keys.push({
-            name: keyName,
-            durationHours: durationHours,
-            startTime: null,
-            status: "active"
-        });
-
-        saveKeys(keys);
-        document.getElementById('customKey').value = "";
-        alert(`Key "${keyName}" Generated Successfully!`);
+        return result;
     }
 
-    function deleteKey(index) {
-        let keys = getKeys();
-        let deletedName = keys[index].name;
-        keys.splice(index, 1);
-        saveKeys(keys);
-        alert(`Key "${deletedName}" deleted successfully!`);
+    return (
+        "GAMER-" +
+        part(4) + "-" +
+        part(4) + "-" +
+        part(4) + "-" +
+        part(4)
+    );
+}
+
+
+/* TOAST */
+
+function showToast(message) {
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    }, 1800);
+}
+
+
+/* GENERATE BUTTON */
+
+document
+.getElementById("generateBtn")
+.addEventListener("click", function() {
+
+    const key = makeKey();
+
+    keyOutput.value = key;
+
+    display.textContent =
+        "✓ KEY GENERATED";
+
+    display.style.color =
+        "#00c8ff";
+
+    display.style.textShadow =
+        "0 0 10px rgba(0,191,255,.5)";
+
+    keyArea.style.display =
+        "flex";
+
+    showToast("New key generated!");
+
+});
+
+
+/* COPY BUTTON */
+
+document
+.getElementById("copyBtn")
+.addEventListener("click", async function() {
+
+    if (!keyOutput.value) {
+
+        showToast("Generate a key first!");
+
+        return;
     }
 
-    function renderKeyList() {
-        let keys = getKeys();
-        let container = document.getElementById('keyListContainer');
-        
-        if(keys.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: #64748b; font-size: 12px; padding: 10px;">No keys generated yet.</div>';
-            return;
-        }
+    try {
 
-        let html = '';
-        keys.forEach((k, index) => {
-            let timeText = k.durationHours < 1 ? "5 Secs" : (k.durationHours + " Hours");
-            html += `
-                <div class="key-item">
-                    <div>
-                        <span class="key-info">${k.name}</span> <br>
-                        <span style="font-size: 10px; color: #64748b;">Duration: ${timeText}</span>
-                    </div>
-                    <button class="danger-btn" onclick="deleteKey(${index})">Delete</button>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
+        await navigator.clipboard.writeText(
+            keyOutput.value
+        );
+
+    } catch (error) {
+
+        keyOutput.select();
+
+        document.execCommand("copy");
+
     }
 
-    function copyJsonData() {
-        let keys = getKeys();
-        let jsonString = JSON.stringify(keys, null, 2);
-        navigator.clipboard.writeText(jsonString).then(() => {
-            alert("JSON Copied! Paste it into your GitHub keys.json file.");
-        }).catch(() => {
-            alert("Copy failed.");
-        });
-    }
+    showToast("Key copied!");
+
+});
+
+
+/* TELEGRAM BUTTON */
+
+document
+.getElementById("joinBtn")
+.addEventListener("click", function() {
+
+    /*
+      YAHAN APNA TELEGRAM LINK DAALO
+
+      Example:
+      https://t.me/your_channel
+    */
+
+    const telegramUrl =
+        "https://t.me/gamerking263";
+
+    window.open(
+        telegramUrl,
+        "_blank",
+        "noopener,noreferrer"
+    );
+
+});
+
+
+/* DONE BUTTON */
+
+document
+.getElementById("doneBtn")
+.addEventListener("click", function() {
+
+    showToast("Done!");
+
+});
+
 </script>
+
 </body>
 </html>
